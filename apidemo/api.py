@@ -2,8 +2,55 @@ from ninja import NinjaAPI, Schema
 from datetime import date
 from typing import List
 from django.shortcuts import get_object_or_404
+from pets.models import Pet
 
 api = NinjaAPI()
+
+class PetIn(Schema):
+    name: str
+    species: str = None
+    age: int = None
+
+class PetOut(Schema):
+    id: int
+    name: str
+    species: str
+    age: int
+
+@api.get('/pets/{pet_id}', response=PetOut)
+def get_pet(request, pet_id: int):
+    pet = Pet.objects.get(id=pet_id)
+    return pet
+
+@api.get('/pets/', response=List[PetOut])
+def get_pets(request):
+    pets = Pet.objects.all()
+    return pets
+
+@api.post('/pets/')
+def create_pet(request, payload: PetIn):
+    new_pet = Pet.objects.create(**payload.dict())
+    return {'id': new_pet.id}
+
+@api.put('/pets/{pet_id}')
+def update_pet(request, pet_id: int, payload: PetIn):
+    pet = get_object_or_404(Pet, id=pet_id)
+    for attr, value in payload.dict().items():
+        if value != None:
+            setattr(pet, attr, value)
+    pet.save()
+    return { 'success': True }
+
+@api.delete('/pets/{pet_id}')
+def delete_pet(request, pet_id: int):
+    pet = get_object_or_404(Pet, id=pet_id)
+    pet.delete()
+    return {'success': True}
+
+# @api.get('/employees/{employee_id}', response=EmployeeOut)
+# def get_employee(request, employee_id: int):
+#     employee = get_object_or_404(Employee, id=employee_id)
+#     return employee
 
 class HelloSchema(Schema):
     name: str = 'world'
