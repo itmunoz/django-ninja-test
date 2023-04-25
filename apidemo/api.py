@@ -7,7 +7,7 @@ from pets.models import Pet
 api = NinjaAPI()
 
 class PetIn(Schema):
-    name: str
+    name: str = None
     species: str = None
     age: int = None
 
